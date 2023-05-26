@@ -1,6 +1,7 @@
 #include <type_traits>
 #include <concepts>
 #include <functional>
+#include <vector>
 #include "UIBuildMacros.hpp"
 
 // Include GD and cocos2d classes before this
@@ -53,14 +54,35 @@ namespace uibuilder {
 	 	}
 	};
 
+	inline std::vector<void*> buildStack;
+
 	template <typename T> requires (std::derived_from<T, CCObject>)
 	class Build {
 		T* m_item;
-
 	 public:
+
+	 	Build<T> push() {
+	 		buildStack.push_back(m_item);
+	 		return *this;
+	 	}
+
+	 	static Build<T> pop() {
+	 		auto ret = reinterpret_cast<T*>(buildStack.back());
+	 		buildStack.pop_back();
+
+	 		return Build<T>(ret);
+	 	}
+
+	 	static T* popRaw() {
+	 		auto ret = reinterpret_cast<T*>(buildStack.back());
+	 		buildStack.pop_back();
+
+	 		return ret;
+	 	}
 
 	 	Build<T> store(T*& in) {
 	 		in = m_item;
+	 		return *this;
 	 	}
 
 	 	template <typename ...Args> requires requires(Args... args) {
@@ -274,6 +296,12 @@ namespace uibuilder {
 		setter(CCAction, tag, setTag, int)
 		setter(CCAction, speedMod, setSpeedMod, float)
 
+		template <needs_base(CCAction), typename U>
+		Build<T> runFor(U node) {
+			remove_build<U>()(node)->runAction(m_item);
+			return *this;
+		}
+
 		// CCFollow
 		setter(CCFollow, boundarySet, setBoundarySet, bool)
 
@@ -304,19 +332,19 @@ namespace uibuilder {
 			return Build<CCRepeatForever>::create(m_item);
 		}
 
-		template <needs_base(CCActionInterval), typename U> requires std::same_as<CCActionInterval, remove_build_t<U>>
+		template <needs_base(CCActionInterval), typename U> requires std::derived_from<remove_build_t<U>, CCActionInterval>
 		Build<CCSequence> sequence(U action) {
-			return Build(CCSequence::createWithTwoActions(m_item, remove_build_t<U>()(action)));
+			return Build<CCSequence>(CCSequence::create(m_item, remove_build<U>()(action), nullptr));
 		}
 
 		template <needs_base(CCActionInterval)>
-		Build<CCRepeatForever> wait_after(float d) {
-			return sequence(m_item, Build<CCDelayTime>::create(d));
+		Build<CCSequence> waitAfter(float d) {
+			return sequence(Build<CCDelayTime>::create(d));
 		}
 
 		template <needs_base(CCActionInterval)>
-		Build<CCRepeatForever> wait_before(float d) {
-			return sequence(Build<CCDelayTime>::create(d), m_item);
+		Build<CCSequence> waitBefore(float d) {
+			return Build<CCDelayTime>::create(d).sequence(m_item);
 		}
 
 		// CCEaseRateAction
