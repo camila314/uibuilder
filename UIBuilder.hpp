@@ -1,5 +1,6 @@
 #include <type_traits>
 #include <concepts>
+#include <functional>
 #include "UIBuildMacros.hpp"
 
 // Include GD and cocos2d classes before this
@@ -10,8 +11,52 @@ namespace uibuilder {
 	using namespace cocos2d::extension;
 
 	template <typename T> requires (std::derived_from<T, CCObject>)
+	class Build;
+
+	template <typename T>
+	struct _remove_build {
+		using value = std::remove_reference_t<std::remove_pointer_t<T>>;
+	};
+
+	template <typename T>
+	struct _remove_build<Build<T>> {
+		using value = T;
+	};
+
+	template <typename T>
+	using remove_build_t = typename _remove_build<T>::value;
+
+	template <typename T>
+	struct remove_build {
+		T operator()(T a) { return a; }
+	};
+
+	template <typename T>
+	class BuildCallback : public CCNode {
+		std::function<void(T*)> m_callback;
+	 public:
+	 	static BuildCallback* create(std::function<void(T*)> cb) {
+	 		auto bc = new BuildCallback;
+
+	 		if (bc && bc->init()) {
+	 			bc->autorelease();
+	 			bc->m_callback = cb;
+	 			return bc;
+	 		}
+
+	 		CC_SAFE_DELETE(bc);
+	 		return nullptr;
+	 	}
+
+	 	void onCallback(CCObject* sender) {
+	 		m_callback(static_cast<T*>(sender));
+	 	}
+	};
+
+	template <typename T> requires (std::derived_from<T, CCObject>)
 	class Build {
 		T* m_item;
+
 	 public:
 
 	 	Build<T> store(T*& in) {
@@ -61,9 +106,14 @@ namespace uibuilder {
 		setter(CCNode, visible, setVisible, bool)
 		setter(CCNode, rotation, setRotation, float)
 		setter(CCNode, child, addChild, CCNode*)
-		setter(CCNode, parent, setParent, CCNode*)
 		setter(CCNode, userData, setUserData, void*)
 		setter(CCNode, userObject, setUserObject, CCObject*)
+
+		template <needs_base(CCNode), typename U>
+		Build<T> parent(U newParent) {
+			remove_build<U>()(newParent)->addChild(m_item);
+			return *this;
+		}
 
 		template <needs_base(CCNode), typename U>
 		Build<U> intoParent() {
@@ -81,20 +131,20 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode), typename U>
-		Build<U> intoNewChild(U* newChild, int idx = 0, int tag = 0) {
-			m_item->addChild(newChild, idx, tag);
-			return Build<U>(newChild);
+		Build<remove_build_t<U>> intoNewChild(U newChild, int idx = 0, int tag = 0) {
+			m_item->addChild(remove_build<U>()(newChild), idx, tag);
+			return Build<remove_build_t<U>>(newChild);
 		}
 
 		template <needs_base(CCNode), typename U>
-		Build<U> intoNewSibling(U* newSibling, int idx = 0, int tag = 0) {
+		Build<remove_build_t<U>> intoNewSibling(U newSibling, int idx = 0, int tag = 0) {
 			return intoParent().intoNewChild(newSibling, idx, tag);
 		}
 
 		template <needs_base(CCNode), typename U>
-		Build<U> intoNewParent(U* newParent) {
-			m_item->setParent(newParent);
-			return Build<U>(newParent);
+		Build<remove_build_t<U>> intoNewParent(U newParent) {
+			remove_build<U>()(newParent)->addChild(m_item);
+			return Build<remove_build_t<U>>(newParent);
 		}
 
 		template <needs_base(CCNode)>
@@ -174,6 +224,19 @@ namespace uibuilder {
 			return Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, selector);
 		}
 
+		template <needs_base(CCSprite)>
+		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void(CCMenuItemSpriteExtra*)> fn) {
+			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
+			m_item->addChild(bc);
+
+			return Build<CCMenuItemSpriteExtra>::create(
+				m_item,
+				m_item,
+				bc,
+				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
+			);
+		}
+
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
 
@@ -241,9 +304,9 @@ namespace uibuilder {
 			return Build<CCRepeatForever>::create(m_item);
 		}
 
-		template <needs_base(CCActionInterval)>
-		Build<CCSequence> sequence(CCActionInterval* action) {
-			return Build(CCSequence::createWithTwoActions(m_item, action));
+		template <needs_base(CCActionInterval), typename U> requires std::same_as<CCActionInterval, remove_build_t<U>>
+		Build<CCSequence> sequence(U action) {
+			return Build(CCSequence::createWithTwoActions(m_item, remove_build_t<U>()(action)));
 		}
 
 		template <needs_base(CCActionInterval)>
@@ -259,6 +322,13 @@ namespace uibuilder {
 		// CCEaseRateAction
 		setter(CCEaseRateAction, easeRate, setRate, float)
 	};
+
+
+	template <typename T>
+	struct remove_build<Build<T>> {
+		T* operator()(Build<T> a) { return a.collect(); }
+	};
+
 }
 
 using uibuilder::Build;
