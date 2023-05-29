@@ -185,6 +185,21 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
+		Build<T> move(float x, float y) {
+			return pos(m_item->getPositionX() + x, m_item->getPositionY() + y);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> move(CCPoint const& p) {
+			return move(p.x, p.y);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> center() {
+			return pos(CCPoint(CCDirector::sharedDirector()->getWinSize() / 2.0));
+		}
+
+		template <needs_base(CCNode)>
 		Build<T> anchorPoint(float x, float y) {
 			return anchorPoint(ccp(x, y));
 		}
