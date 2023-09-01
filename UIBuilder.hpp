@@ -143,7 +143,7 @@ namespace uibuilder {
 		}
 
 		template <typename U, needs_base(CCNode)>
-		Build<U> intoChild<U>(unsigned int idx) {
+		Build<U> intoChild(unsigned int idx) {
 			return Build(static_cast<U*>(m_item->getChildren()->objectAtIndex(idx)));
 		}
 
