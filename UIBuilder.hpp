@@ -114,7 +114,6 @@ namespace uibuilder {
 
 		// CCNode
 		setter(CCNode, pos, setPosition, CCPoint const&)
-		setter(CCNode, pos, setPosition, float, float)
 		setter(CCNode, posX, setPositionX, float)
 		setter(CCNode, posY, setPositionY, float)
 		setter(CCNode, scale, setScale, float)
@@ -167,6 +166,11 @@ namespace uibuilder {
 		Build<remove_build_t<U>> intoNewParent(U newParent) {
 			remove_build<U>()(newParent)->addChild(m_item);
 			return Build<remove_build_t<U>>(newParent);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> pos(float x, float y) {
+			return pos(ccp(x, y));
 		}
 
 		template <needs_base(CCNode)>
