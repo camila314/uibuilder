@@ -241,6 +241,19 @@ namespace uibuilder {
 		// CCMenuItemSpriteExtra
 		setter(CCMenuItemSpriteExtra, sizeMult, setSizeMult, float)
 
+		// CCMenuItemToggler
+		template <needs_same(CCMenuItemToggler)>
+		static Build<T> createToggle(CCSprite* on, CCSprite* off, std::function<void(CCMenuItemToggler*)> fn) {
+			auto bc = BuildCallback<CCMenuItemToggler>::create(fn);
+
+			return Build<CCMenuItemToggler>::create(
+				on,
+				off,
+				bc,
+				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
+			).child(bc);	
+		}
+
 		// CCSprite
 		template <needs_same(CCSprite)>
 		static Build<T> createSpriteName(char const* frame) {

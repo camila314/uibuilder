@@ -4,7 +4,7 @@
 #define setter_n(base, name, oldname, arg, param) \
     template <needs_base(base)> \
     Build<T> name arg {\
-        m_item->oldname param;\
+        this->m_item->oldname param;\
         return *this;\
     }
 
