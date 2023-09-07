@@ -235,6 +235,32 @@ namespace uibuilder {
 			return touchEnabled(true).mouseEnabled(true);
 		}
 
+		template <needs_base(CCLayer)>
+		Build<CCScene> intoScene() {
+			auto scene = CCScene::create();
+			scene->addChild(m_item);
+			return Build(scene);
+		}
+
+		// CCScene
+		template <needs_base(CCScene)>
+		Build<T> pushScene() {
+			CCDirector::sharedDirector()->pushScene(m_item);
+			return *this;
+		}
+
+		template <needs_base(CCScene)>
+		Build<T> replaceScene() {
+			CCDirector::sharedDirector()->replaceScene(m_item);
+			return *this;
+		}
+
+		template <needs_base(CCScene)>
+		Build<CCTransitionFade> fadeIn(float fade) {
+			return Build<CCTransitionFade>::create(fade, m_item);
+		}
+
+
 		// CCMenu
 		setter(CCMenu, enabled, setEnabled, bool)
 
@@ -381,6 +407,7 @@ namespace uibuilder {
 
 		// CCEaseRateAction
 		setter(CCEaseRateAction, easeRate, setRate, float)
+
 	};
 
 
