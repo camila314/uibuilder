@@ -239,7 +239,7 @@ namespace uibuilder {
 		Build<CCScene> intoScene() {
 			auto scene = CCScene::create();
 			scene->addChild(m_item);
-			return Build(scene);
+			return Build<CCScene>(scene);
 		}
 
 		// CCScene
