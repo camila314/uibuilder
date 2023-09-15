@@ -115,7 +115,7 @@ namespace uibuilder {
 		template <needs_base(CCArray), typename U>
 		Build<T> forEach(std::function<void(U*)> iter) {
 			for (unsigned int i = 0; i < m_item->count(); ++i) {
-				iter(m_item->objectAtIndex(i));
+				iter(static_cast<U*>(m_item->objectAtIndex(i)));
 			}
 
 			return *this;
@@ -215,6 +215,15 @@ namespace uibuilder {
 		template <needs_base(CCNode)>
 		Build<T> anchorPoint(float x, float y) {
 			return anchorPoint(ccp(x, y));
+		}
+
+		template <needs_base(CCNode), typename U>
+		Build<T> iterChildren(std::function<void(U*)> iter) {
+			for (unsigned int i = 0; i < m_item->getChildrenCount(); ++i) {
+				iter(static_cast<U*>(m_item->getChildren()->objectAtIndex(i)));
+			}
+
+			return *this;
 		}
 
 		// CCRGBAProtocol
