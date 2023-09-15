@@ -112,6 +112,15 @@ namespace uibuilder {
 			return Build<U>(m_item->objectAtIndex(index));
 		}
 
+		template <needs_base(CCArray), typename U>
+		Build<T> forEach(std::function<void(U*)> iter) {
+			for (unsigned int i = 0; i < m_item->count(); ++i) {
+				iter(m_item->objectAtIndex(i));
+			}
+
+			return *this;
+		}
+
 		// CCNode
 		setter(CCNode, pos, setPosition, CCPoint const&)
 		setter(CCNode, posX, setPositionX, float)
