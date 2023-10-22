@@ -226,6 +226,18 @@ namespace uibuilder {
 			return *this;
 		}
 
+		// Geode stuff
+		#ifdef GEODE_DLL
+		setter(CCNode, id, setID, std::string const&)
+		setter(CCNode, layout, setLayout, Layout*)
+
+		template <needs_base(CCNode)>
+		Build<T> updateLayout() {
+			m_item->updateLayout();
+			return *this;
+		}
+		#endif
+
 		// CCRGBAProtocol
 		setter(CCRGBAProtocol, opacity, setOpacity, unsigned char)
 		setter(CCRGBAProtocol, color, setColor, const ccColor3B&)
@@ -334,6 +346,7 @@ namespace uibuilder {
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
 			);
 		}
+		
 
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
