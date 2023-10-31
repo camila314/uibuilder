@@ -57,7 +57,6 @@ namespace uibuilder {
 	};
 
 	inline std::vector<void*> buildStack;
-
 	template <typename T> requires (std::derived_from<T, CCObject>)
 	class Build {
 		T* m_item;
@@ -114,7 +113,7 @@ namespace uibuilder {
 			return Build<U>(m_item->objectAtIndex(index));
 		}
 
-		template <needs_base(CCArray), typename U>
+		template <typename U, needs_base(CCArray)>
 		Build<T> forEach(std::function<void(U*)> iter) {
 			for (unsigned int i = 0; i < m_item->count(); ++i) {
 				iter(static_cast<U*>(m_item->objectAtIndex(i)));
@@ -379,6 +378,9 @@ namespace uibuilder {
 		// ButtonSprite
 		setter(ButtonSprite, string, setString, char const*)
 
+		// SimplePlayer
+		setter(SimplePlayer, secondColor, setSecondColor, ccColor3B const&)
+		setter(SimplePlayer, playerFrame, updatePlayerFrame, int, int)
 
 		/// Actions
 
