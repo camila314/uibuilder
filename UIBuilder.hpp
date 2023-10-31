@@ -381,6 +381,7 @@ namespace uibuilder {
 		// SimplePlayer
 		setter(SimplePlayer, secondColor, setSecondColor, ccColor3B const&)
 		setter(SimplePlayer, playerFrame, updatePlayerFrame, int, int)
+		setter(SimplePlayer, glowOutline, setGlowOutline, ccColor3B const&)
 
 		/// Actions
 
