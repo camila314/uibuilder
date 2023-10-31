@@ -151,12 +151,12 @@ namespace uibuilder {
 			return Build<U>(static_cast<U*>(m_item->getParent()));
 		}
 
-		template <typename U, needs_base(CCNode)>
+		template <typename U = CCNode, needs_base(CCNode)>
 		Build<U> intoChild(unsigned int idx) {
 			return Build(static_cast<U*>(m_item->getChildren()->objectAtIndex(idx)));
 		}
 
-		template <typename U, needs_base(CCNode)>
+		template <typename U = CCNode, needs_base(CCNode)>
 		Build<U> intoChildByTag(int tag) {
 			return Build<U>(static_cast<U*>(m_item->getChildByTag(tag)));
 		}
@@ -238,7 +238,7 @@ namespace uibuilder {
 			return *this;
 		}
 
-		template <typename U, needs_base(CCNode)>
+		template <typename U = CCNode, needs_base(CCNode)>
 		Build<U> intoChildByID(std::string const& id) {
 			return Build<U>(static_cast<U*>(m_item->getChildByID(id)));
 		}
