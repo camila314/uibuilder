@@ -95,7 +95,8 @@ namespace uibuilder {
 
 		Build(T* item) : m_item(item) {}
 
-		T* collect() {return m_item;}
+		template <typename U = T>
+		U* collect() {return reinterpret_cast<U*>(m_item);}
 
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
@@ -380,7 +381,7 @@ namespace uibuilder {
 
 		// SimplePlayer
 		setter(SimplePlayer, secondColor, setSecondColor, ccColor3B const&)
-		setter(SimplePlayer, playerFrame, updatePlayerFrame, int, int)
+		setter(SimplePlayer, playerFrame, updatePlayerFrame, int, IconType)
 		setter(SimplePlayer, glowOutline, setGlowOutline, bool)
 
 		/// Actions
