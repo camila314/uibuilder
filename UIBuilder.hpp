@@ -95,8 +95,7 @@ namespace uibuilder {
 
 		Build(T* item) : m_item(item) {}
 
-		template <typename U = T>
-		U* collect() {return reinterpret_cast<U*>(m_item);}
+		T* collect() {return m_item;}
 
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
@@ -238,6 +237,12 @@ namespace uibuilder {
 			m_item->updateLayout();
 			return *this;
 		}
+
+		template <typename U, needs_base(CCNode)>
+		Build<U> intoChildByID(std::string const& id) {
+			return Build<U>(static_cast<U*>(m_item->getChildByID(id)));
+		}
+
 		#endif
 
 		// CCRGBAProtocol
