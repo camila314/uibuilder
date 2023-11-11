@@ -253,9 +253,9 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
-		Build<T> schedule(std::function<void(float)> fn, int repeat = -1, float interval = 0.0, float delay = 0.0) {
+		Build<T> schedule(std::function<void(float)> fn, int repeat = -1) {
 			auto node = BuildSchedule::create(fn);
-			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat, interval, delay);	
+			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat);	
 			m_item->addChild(node);
 			return *this;
 		}
