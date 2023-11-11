@@ -34,6 +34,8 @@ namespace uibuilder {
 		T operator()(T a) { return a; }
 	};
 
+	// helper classes
+
 	template <typename T>
 	class BuildCallback : public CCNode {
 		std::function<void(T*)> m_callback;
@@ -55,6 +57,29 @@ namespace uibuilder {
 	 		m_callback(static_cast<T*>(sender));
 	 	}
 	};
+
+	class BuildSchedule : public CCNode {
+		std::function<void(float)> m_callback;
+	 public:
+	 	inline static BuildSchedule* create(std::function<void(float)> cb) {
+	 		auto bu = new BuildSchedule;
+
+	 		if (bu && bu->init()) {
+	 			bu->autorelease();
+	 			bu->m_callback = cb;
+	 			return bu;
+	 		}
+
+	 		CC_SAFE_DELETE(bu);
+	 		return nullptr;
+	 	}
+
+	 	inline void onSchedule(float dt) {
+	 		m_callback(dt);
+	 	}
+	};
+
+	// the thing
 
 	inline std::vector<void*> buildStack;
 	template <typename T> requires (std::derived_from<T, CCObject>)
@@ -224,6 +249,14 @@ namespace uibuilder {
 				iter(static_cast<U*>(m_item->getChildren()->objectAtIndex(i)));
 			}
 
+			return *this;
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> schedule(std::function<void(float)> fn, int repeat = -1, float interval = 0.0, float delay = 0.0) {
+			auto node = BuildSchedule::create(fn);
+			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat, interval, delay);	
+			m_item->addChild(node);
 			return *this;
 		}
 
