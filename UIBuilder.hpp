@@ -301,7 +301,6 @@ namespace uibuilder {
 		template <needs_base(CCLayer)>
 		Build<T> initTouch() {
 			registerTouchDispatcher();
-			CCDirector::sharedDirector()->getTouchDispatcher()->incrementForcePrio(2);
 			return touchEnabled(true).mouseEnabled(true);
 		}
 
