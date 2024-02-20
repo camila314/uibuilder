@@ -116,7 +116,7 @@ namespace uibuilder {
 	 	}
 	 	static Build<T> create(Args... args) {
 	 		return Build(T::create(args...));
-	 	} 
+	 	}
 
 		Build(T* item) : m_item(item) {}
 
@@ -124,6 +124,10 @@ namespace uibuilder {
 
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
+
+		// CCObject
+
+		setter(CCObject, tag, setTag, int)
 
 		// CCArray
 
@@ -255,7 +259,7 @@ namespace uibuilder {
 		template <needs_base(CCNode)>
 		Build<T> schedule(std::function<void(float)> fn, int repeat = -1) {
 			auto node = BuildSchedule::create(fn);
-			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat);	
+			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat);
 			m_item->addChild(node);
 			return *this;
 		}
@@ -350,7 +354,7 @@ namespace uibuilder {
 				off,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
-			).child(bc);	
+			).child(bc);
 		}
 
 		// CCSprite
@@ -385,7 +389,7 @@ namespace uibuilder {
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
 			);
 		}
-		
+
 
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
@@ -425,7 +429,6 @@ namespace uibuilder {
 
 		// CCAction
 		setter(CCAction, target, setTarget, CCNode*)
-		setter(CCAction, tag, setTag, int)
 		setter(CCAction, speedMod, setSpeedMod, float)
 
 		template <needs_base(CCAction), typename U>
