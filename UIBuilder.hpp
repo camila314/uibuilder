@@ -111,6 +111,11 @@ namespace uibuilder {
 	 		return *this;
 	 	}
 
+		Build<T> store(geode::Ref<T>& in) {
+			in = m_item;
+			return *this;
+		}
+
 	 	template <typename ...Args> requires requires(Args... args) {
 	 		T::create(args...);
 	 	}
