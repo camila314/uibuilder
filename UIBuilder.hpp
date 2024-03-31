@@ -349,6 +349,12 @@ namespace uibuilder {
 		// CCMenuItemSpriteExtra
 		setter(CCMenuItemSpriteExtra, sizeMult, setSizeMult, float)
 
+		template <needs_base(CCMenuItemSpriteExtra)>
+		Build<T> scaleMult(float p0) {
+			this->m_item->m_scaleMultiplier = p0;
+			return *this;
+		}
+
 		// CCMenuItemToggler
 		template <needs_same(CCMenuItemToggler)>
 		static Build<T> createToggle(CCSprite* on, CCSprite* off, std::function<void(CCMenuItemToggler*)> fn) {
