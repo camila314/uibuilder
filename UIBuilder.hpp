@@ -382,6 +382,7 @@ namespace uibuilder {
 		setter(CCSprite, dirty, setDirty, bool)
 		setter(CCSprite, flipX, setFlipX, bool)
 		setter(CCSprite, flipY, setFlipY, bool)
+		setter(CCSprite, blendFunc, setBlendFunc, ccBlendFunc)
 
 		template <needs_base(CCSprite)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, SEL_MenuHandler selector) {
