@@ -402,6 +402,20 @@ namespace uibuilder {
 			);
 		}
 
+		// same as intoMenuItem except the callback can be with no args
+		template <needs_base(CCNode)>
+		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
+			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
+			m_item->addChild(bc);
+
+			return Build<CCMenuItemSpriteExtra>::create(
+				m_item,
+				m_item,
+				bc,
+				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
+			);
+		}
+
 
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
