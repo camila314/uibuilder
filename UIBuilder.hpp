@@ -170,6 +170,7 @@ namespace uibuilder {
 		setter(CCNode, contentSize, setContentSize, CCSize const&)
 		setter(CCNode, visible, setVisible, bool)
 		setter(CCNode, rotation, setRotation, float)
+		setter(CCNode, ignoreAnchorPointForPos, ignoreAnchorPointForPosition, bool)
 		setter(CCNode, child, addChild, CCNode*)
 		setter(CCNode, userData, setUserData, void*)
 		setter(CCNode, userObject, setUserObject, CCObject*)
