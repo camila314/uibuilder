@@ -79,6 +79,10 @@ namespace uibuilder {
 	 	}
 	};
 
+	class BuildAction : public CCActionInterval {
+
+	}
+
 	// the thing
 
 	inline std::vector<void*> buildStack;
@@ -283,6 +287,16 @@ namespace uibuilder {
 			return *this;
 		}
 
+		template <needs_base(CCNode)>
+		Build<CCAction> intoAction(int tag) {
+			return Build<CCAction>(m_item->getActionByTag(tag));
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> runFiniteAction(int tag, std::function<void(float, T*)>) {
+
+		}
+
 		// Geode stuff
 		#ifdef GEODE_DLL
 		setter(CCNode, id, setID, std::string const&)
@@ -406,28 +420,28 @@ namespace uibuilder {
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void(CCMenuItemSpriteExtra*)> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
-			m_item->CCNode::addChild(bc);
+			//m_item->addChild(bc);
 
 			return Build<CCMenuItemSpriteExtra>::create(
 				m_item,
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
-			);
+			).parent(bc);
 		}
 
 		// same as intoMenuItem except the callback can be with no args
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
-			m_item->CCNode::addChild(bc);
+			//m_item->addChild(bc);
 
 			return Build<CCMenuItemSpriteExtra>::create(
 				m_item,
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
-			);
+			).parent(bc);
 		}
 
 
