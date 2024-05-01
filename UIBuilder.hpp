@@ -398,12 +398,12 @@ namespace uibuilder {
 		setter(CCSprite, flipY, setFlipY, bool)
 		setter(CCSprite, blendFunc, setBlendFunc, ccBlendFunc)
 
-		template <needs_base(CCSprite)>
+		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, SEL_MenuHandler selector) {
 			return Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, selector);
 		}
 
-		template <needs_base(CCSprite)>
+		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void(CCMenuItemSpriteExtra*)> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
 			m_item->addChild(bc);
@@ -417,7 +417,7 @@ namespace uibuilder {
 		}
 
 		// same as intoMenuItem except the callback can be with no args
-		template <needs_base(CCSprite)>
+		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
 			m_item->addChild(bc);
