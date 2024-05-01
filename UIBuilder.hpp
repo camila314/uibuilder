@@ -406,7 +406,7 @@ namespace uibuilder {
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void(CCMenuItemSpriteExtra*)> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
-			m_item->addChild(bc);
+			m_item->CCNode::addChild(bc);
 
 			return Build<CCMenuItemSpriteExtra>::create(
 				m_item,
@@ -420,7 +420,7 @@ namespace uibuilder {
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
-			m_item->addChild(bc);
+			m_item->CCNode::addChild(bc);
 
 			return Build<CCMenuItemSpriteExtra>::create(
 				m_item,
