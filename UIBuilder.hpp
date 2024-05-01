@@ -246,6 +246,21 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
+		Build<T> scaleBy(float amt) {
+			return scale(m_item->getScale() * amt);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> scaleXBy(float amt) {
+			return scaleX(m_item->getScaleX() * amt);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> scaleYBy(float amt) {
+			return scaleY(m_item->getScaleY() * amt);
+		}
+
+		template <needs_base(CCNode)>
 		Build<T> move(float x, float y) {
 			return pos(m_item->getPositionX() + x, m_item->getPositionY() + y);
 		}
@@ -256,8 +271,32 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
+		Build<T> absoluteCenter() {
+			return absolutePos(CCPoint(CCDirector::sharedDirector()->getWinSize() / 2.0));
+		}
+
+		template <needs_base(CCNode)>
 		Build<T> center() {
-			return pos(CCPoint(CCDirector::sharedDirector()->getWinSize() / 2.0));
+			if (m_item->getParent() == nullptr)
+				return absoluteCenter();
+			else
+				return pos(m_item->getParent()->getContentSize() / 2);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> absolutePos(CCPoint const& p) {
+			if (m_item->getParent() == nullptr)
+				return pos(p);
+			else
+				return pos(m_item->getParent()->convertToNodeSpace(p));
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> matchPos(CCNode* other) {
+			if (other->getParent() != nullptr)
+				return absolutePos(other->getParent()->convertToWorldSpace(other->getPosition()));
+			else
+				return absolutePos(other->getPosition());
 		}
 
 		template <needs_base(CCNode)>
