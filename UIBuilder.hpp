@@ -79,10 +79,6 @@ namespace uibuilder {
 	 	}
 	};
 
-	/*class BuildAction : public CCActionInterval {
-
-	}*/
-
 	// the thing
 
 	inline std::vector<void*> buildStack;
@@ -292,11 +288,6 @@ namespace uibuilder {
 			return Build<CCAction>(m_item->getActionByTag(tag));
 		}
 
-		/*template <needs_base(CCNode)>
-		Build<T> runFiniteAction(int tag, std::function<void(float, T*)>) {
-
-		}*/
-
 		// Geode stuff
 		#ifdef GEODE_DLL
 		setter(CCNode, id, setID, std::string const&)
@@ -427,7 +418,7 @@ namespace uibuilder {
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
-			).parent(bc);
+			).child(bc);
 		}
 
 		// same as intoMenuItem except the callback can be with no args
@@ -441,7 +432,7 @@ namespace uibuilder {
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
-			).parent(bc);
+			).child(bc);
 		}
 
 
