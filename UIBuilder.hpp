@@ -111,10 +111,12 @@ namespace uibuilder {
 	 		return *this;
 	 	}
 
+		#ifdef GEODE_PLATFORM_TARGET
 		Build<T> store(geode::Ref<T>& in) {
 			in = m_item;
 			return *this;
 		}
+		#endif
 
 	 	template <typename ...Args> requires requires(Args... args) {
 	 		T::create(args...);
