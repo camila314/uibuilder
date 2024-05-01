@@ -149,6 +149,17 @@ namespace uibuilder {
 			return Build<U>(m_item->objectAtIndex(index));
 		}
 
+		template <typename U>
+		Build<T> with(std::function<void(U*)> fn) {
+			fn(static_cast<U*>(m_item));
+			return *this;
+		}
+
+		template <typename U>
+		Build<U> as() {
+			return Build<U>(static_cast<U*>(m_item));
+		}
+
 		template <typename U, needs_base(CCArray)>
 		Build<T> forEach(std::function<void(U*)> iter) {
 			for (unsigned int i = 0; i < m_item->count(); ++i) {
