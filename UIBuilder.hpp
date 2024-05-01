@@ -149,9 +149,8 @@ namespace uibuilder {
 			return Build<U>(m_item->objectAtIndex(index));
 		}
 
-		template <typename U = T>
-		Build<T> with(std::function<void(U*)> fn) {
-			fn(static_cast<U*>(m_item));
+		Build<T> with(std::function<void(T*)> fn) {
+			fn(m_item);
 			return *this;
 		}
 
