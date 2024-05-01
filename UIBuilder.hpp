@@ -111,12 +111,19 @@ namespace uibuilder {
 	 		return *this;
 	 	}
 
+		#ifdef GEODE_PLATFORM_TARGET
+		Build<T> store(geode::Ref<T>& in) {
+			in = m_item;
+			return *this;
+		}
+		#endif
+
 	 	template <typename ...Args> requires requires(Args... args) {
 	 		T::create(args...);
 	 	}
 	 	static Build<T> create(Args... args) {
 	 		return Build(T::create(args...));
-	 	} 
+	 	}
 
 		Build(T* item) : m_item(item) {}
 
@@ -124,6 +131,10 @@ namespace uibuilder {
 
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
+
+		// CCObject
+
+		setter(CCObject, tag, setTag, int)
 
 		// CCArray
 
@@ -161,6 +172,7 @@ namespace uibuilder {
 		setter(CCNode, contentSize, setContentSize, CCSize const&)
 		setter(CCNode, visible, setVisible, bool)
 		setter(CCNode, rotation, setRotation, float)
+		setter(CCNode, ignoreAnchorPointForPos, ignoreAnchorPointForPosition, bool)
 		setter(CCNode, child, addChild, CCNode*)
 		setter(CCNode, userData, setUserData, void*)
 		setter(CCNode, userObject, setUserObject, CCObject*)
@@ -255,7 +267,7 @@ namespace uibuilder {
 		template <needs_base(CCNode)>
 		Build<T> schedule(std::function<void(float)> fn, int repeat = -1) {
 			auto node = BuildSchedule::create(fn);
-			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat);	
+			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat);
 			m_item->addChild(node);
 			return *this;
 		}
@@ -301,7 +313,6 @@ namespace uibuilder {
 		template <needs_base(CCLayer)>
 		Build<T> initTouch() {
 			registerTouchDispatcher();
-			CCDirector::sharedDirector()->getTouchDispatcher()->incrementForcePrio(2);
 			return touchEnabled(true).mouseEnabled(true);
 		}
 
@@ -341,6 +352,12 @@ namespace uibuilder {
 		// CCMenuItemSpriteExtra
 		setter(CCMenuItemSpriteExtra, sizeMult, setSizeMult, float)
 
+		template <needs_base(CCMenuItemSpriteExtra)>
+		Build<T> scaleMult(float p0) {
+			this->m_item->m_scaleMultiplier = p0;
+			return *this;
+		}
+
 		// CCMenuItemToggler
 		template <needs_same(CCMenuItemToggler)>
 		static Build<T> createToggle(CCSprite* on, CCSprite* off, std::function<void(CCMenuItemToggler*)> fn) {
@@ -351,7 +368,7 @@ namespace uibuilder {
 				off,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
-			).child(bc);	
+			).child(bc);
 		}
 
 		// CCSprite
@@ -368,6 +385,7 @@ namespace uibuilder {
 		setter(CCSprite, dirty, setDirty, bool)
 		setter(CCSprite, flipX, setFlipX, bool)
 		setter(CCSprite, flipY, setFlipY, bool)
+		setter(CCSprite, blendFunc, setBlendFunc, ccBlendFunc)
 
 		template <needs_base(CCSprite)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, SEL_MenuHandler selector) {
@@ -386,7 +404,21 @@ namespace uibuilder {
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
 			);
 		}
-		
+
+		// same as intoMenuItem except the callback can be with no args
+		template <needs_base(CCSprite)>
+		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
+			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
+			m_item->addChild(bc);
+
+			return Build<CCMenuItemSpriteExtra>::create(
+				m_item,
+				m_item,
+				bc,
+				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
+			);
+		}
+
 
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
@@ -426,7 +458,6 @@ namespace uibuilder {
 
 		// CCAction
 		setter(CCAction, target, setTarget, CCNode*)
-		setter(CCAction, tag, setTag, int)
 		setter(CCAction, speedMod, setSpeedMod, float)
 
 		template <needs_base(CCAction), typename U>
