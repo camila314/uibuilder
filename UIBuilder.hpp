@@ -13,6 +13,10 @@ namespace uibuilder {
 	using namespace cocos2d;
 	using namespace cocos2d::extension;
 
+	#ifdef GEODE_DLL
+	using geode::Layout;
+	#endif
+
 	template <typename T> requires (std::derived_from<T, CCObject>)
 	class Build;
 
