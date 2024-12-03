@@ -346,6 +346,12 @@ namespace uibuilder {
 			return Build<U>(static_cast<U*>(m_item->getChildByID(id)));
 		}
 
+		template <needs_base(CCNode), typename U>
+		Build<T> parentAtPos(U newParent, geode::Anchor anchor, CCPoint const& offset = CCPointZero, bool useAnchorLayout = true) {
+			remove_build<U>()(newParent)->addChildAtPosition(m_item, anchor, offset, useAnchorLayout);
+			return *this;
+		}
+
 		#endif
 
 		// CCRGBAProtocol
