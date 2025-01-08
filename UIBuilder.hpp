@@ -393,8 +393,9 @@ namespace uibuilder {
 
 		template <needs_base(CCLayer)>
 		Build<T> initTouch() {
+			touchEnabled(true).mouseEnabled(true).touchMode(kCCTouchesOneByOne);
 			CCDirector::sharedDirector()->getTouchDispatcher()->registerForcePrio(m_item, 2);
-			return touchEnabled(true).mouseEnabled(true);
+			return *this;
 		}
 
 		template <needs_base(CCLayer)>
