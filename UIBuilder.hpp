@@ -494,6 +494,7 @@ namespace uibuilder {
 			).child(bc);
 		}
 
+
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
 
@@ -570,14 +571,14 @@ namespace uibuilder {
 			return Build<CCRepeatForever>::create(m_item);
 		}
 
-		template <needs_base(CCActionInterval), typename U> requires std::derived_from<remove_build_t<U>, CCActionInterval>
+		template <needs_base(CCActionInterval), typename U> requires std::derived_from<remove_build_t<U>, CCFiniteTimeAction>
 		Build<CCSequence> sequence(U action) {
 			return Build<CCSequence>(CCSequence::create(m_item, remove_build<U>()(action), nullptr));
 		}
 
 		template <needs_base(CCActionInterval)>
-		Build<CCSequence> sequence(std::function<void(float)> cb) {
-			return sequence(BuildAction::create([fn = std::move(cb)](auto) { fn(); }));
+		Build<CCSequence> sequence(std::function<void()> cb) {
+			return sequence(BuildAction::create([fn = std::move(cb)](float dt) { fn(); }));
 		}
 
 		template <needs_base(CCActionInterval)>
