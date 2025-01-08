@@ -363,6 +363,12 @@ namespace uibuilder {
 			return Build<U>(static_cast<U*>(m_item->getChildByID(id)));
 		}
 
+		template <typename U = CCNode, needs_base(CCNode)>
+		Build<U> intoChildRecurseID(std::string const& id) {
+			return Build<U>(static_cast<U*>(m_item->getChildByIDRecursive(id)));
+		}
+
+
 		#endif
 
 		// CCRGBAProtocol
@@ -387,7 +393,7 @@ namespace uibuilder {
 
 		template <needs_base(CCLayer)>
 		Build<T> initTouch() {
-			registerTouchDispatcher();
+			CCDirector::sharedDirector()->getTouchDispatcher()->registerForcePrio(m_item, 2);
 			return touchEnabled(true).mouseEnabled(true);
 		}
 
@@ -464,34 +470,50 @@ namespace uibuilder {
 
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, SEL_MenuHandler selector) {
-			return Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, selector);
+			auto parent = m_item->getParent();
+			if (parent)
+				parent->removeChild(m_item);
+
+			auto ret = Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, selector);
+			if (parent) ret.parent(parent);
+			return ret;
 		}
 
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void(CCMenuItemSpriteExtra*)> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
-			//m_item->addChild(bc);
 
-			return Build<CCMenuItemSpriteExtra>::create(
+			auto parent = m_item->getParent();
+			if (parent)
+				parent->removeChild(m_item);
+
+			auto ret = Build<CCMenuItemSpriteExtra>::create(
 				m_item,
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
 			).child(bc);
+			if (parent) ret.parent(parent);
+			return ret;
 		}
 
 		// same as intoMenuItem except the callback can be with no args
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
-			//m_item->addChild(bc);
 
-			return Build<CCMenuItemSpriteExtra>::create(
+			auto parent = m_item->getParent();
+			if (parent)
+				parent->removeChild(m_item);
+
+			auto ret = Build<CCMenuItemSpriteExtra>::create(
 				m_item,
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
 			).child(bc);
+			if (parent) ret.parent(parent);
+			return ret;
 		}
 
 
