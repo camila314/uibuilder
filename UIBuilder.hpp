@@ -83,6 +83,23 @@ namespace uibuilder {
 	 	}
 	};
 
+	class BuildAction : public CCActionInstant {
+	    std::function<void(float)> m_callback;
+	public:
+	    inline static BuildAction* create(std::function<void(float)> cb) {
+	        auto ba = new BuildAction;
+
+	        ba->autorelease();
+	        ba->m_callback = cb;
+	        return ba;
+	    }
+
+	    void update(float time) override {
+	        m_callback(time);
+	    }
+	};
+
+
 	// the thing
 
 	inline std::vector<void*> buildStack;
@@ -477,7 +494,6 @@ namespace uibuilder {
 			).child(bc);
 		}
 
-
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
 
@@ -557,6 +573,11 @@ namespace uibuilder {
 		template <needs_base(CCActionInterval), typename U> requires std::derived_from<remove_build_t<U>, CCActionInterval>
 		Build<CCSequence> sequence(U action) {
 			return Build<CCSequence>(CCSequence::create(m_item, remove_build<U>()(action), nullptr));
+		}
+
+		template <needs_base(CCActionInterval)>
+		Build<CCSequence> sequence(std::function<void(float)> cb) {
+			return sequence(BuildAction::create([fn = std::move(cb)](auto) { fn(); }));
 		}
 
 		template <needs_base(CCActionInterval)>
