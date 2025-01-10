@@ -153,6 +153,8 @@ namespace uibuilder {
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
 
+		T* operator->() { return m_item; }
+
 		// CCObject
 
 		setter(CCObject, tag, setTag, int)
