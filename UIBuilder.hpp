@@ -212,6 +212,12 @@ namespace uibuilder {
 		setter(CCNode, userData, setUserData, void*)
 		setter(CCNode, userObject, setUserObject, CCObject*)
 
+		template <needs_base(CCNode), typename ...Args>
+		Build<T> children(Args... chld) {
+			(m_item->addChild(chld), ...);
+			return *this;
+		}
+
 		template <needs_base(CCNode), typename U>
 		Build<T> parent(U newParent) {
 			remove_build<U>()(newParent)->addChild(m_item);
