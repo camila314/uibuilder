@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <concepts>
 #include <functional>
+#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 #include "UIBuildMacros.hpp"
 
@@ -210,6 +212,12 @@ namespace uibuilder {
 		setter(CCNode, userData, setUserData, void*)
 		setter(CCNode, userObject, setUserObject, CCObject*)
 
+		template <needs_base(CCNode), typename ...Args>
+		Build<T> children(Args... chld) {
+			(m_item->addChild(chld), ...);
+			return *this;
+		}
+
 		template <needs_base(CCNode), typename U>
 		Build<T> parent(U newParent) {
 			remove_build<U>()(newParent)->addChild(m_item);
@@ -340,6 +348,14 @@ namespace uibuilder {
 		Build<T> schedule(std::function<void(float)> fn, int repeat = -1) {
 			auto node = BuildSchedule::create(fn);
 			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat);
+			m_item->addChild(node);
+			return *this;
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> scheduleOnce(std::function<void(float)> fn, float delay = 0) {
+			auto node = BuildSchedule::create(fn);
+			node->scheduleOnce(schedule_selector(BuildSchedule::onSchedule), delay);
 			m_item->addChild(node);
 			return *this;
 		}
