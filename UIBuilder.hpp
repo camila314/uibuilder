@@ -1,11 +1,13 @@
 #pragma once
 
+#include <list>
 #include <type_traits>
 #include <concepts>
 #include <functional>
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 #include "UIBuildMacros.hpp"
 
 // Include GD and cocos2d classes before this
@@ -18,6 +20,93 @@ namespace uibuilder {
 	#ifdef GEODE_DLL
 	using geode::Layout;
 	#endif
+
+	template <typename T>
+	class Reactive {
+		T m_value;
+		bool m_inCtx;
+		std::list<std::function<void(T const&)>> m_listeners;
+
+	 public:
+	 	using ListenerPtr = decltype(m_listeners)::pointer;
+
+	 	class Guard {
+	 		Reactive<T>& m_reactive;
+	 		T m_tempVal;
+	 		Guard(Reactive<T>& r) : m_reactive(r), m_tempVal(r.m_value) {
+	 			r.m_inCtx = true;
+	 		}
+	 	 public:
+	 		Guard(Guard const&) = delete;
+
+	 		void operator=(Guard const&) = delete;
+
+	 		T operator->() requires std::is_pointer_v<T> { return &m_tempVal; }
+	 		T* operator->() requires (!std::is_pointer_v<T>) { return &m_tempVal; }
+	 		T& operator*() { return m_tempVal; }
+
+	 		operator T() const {
+	 			return m_tempVal;
+	 		}
+
+	 	 	~Guard() {
+	 	 		m_reactive.m_inCtx = false;
+	 	 		m_reactive.set(m_tempVal);
+	 	 	}
+	 	};
+	 	friend class Guard;
+
+		Reactive(T const& initial) : m_value(initial), m_inCtx(false) {}
+		Reactive() requires std::is_default_constructible_v<T> : m_value(), m_inCtx(false) {}
+		Reactive(T&& initial) : m_value(std::move(initial)), m_inCtx(false) {}
+		Reactive(Reactive const& other) : m_value(other.m_value), m_inCtx(false) {}
+		Reactive(Reactive&& other) : m_value(std::move(other.m_value)), m_inCtx(false) {}
+
+		void set(T const& val) {
+			if (m_inCtx) {
+				#ifdef GEODE_DLL
+				geode::log::error("Attempt to modify value within its own listener!");
+				#else
+				std::cerr << "Attempt to modify value within its own listener!" << std::endl;
+				#endif
+				return;
+			} else if (m_value == val) {
+				return;
+			}
+
+			m_value = val;
+			m_inCtx = true;
+			for (auto const& fn : m_listeners)
+				fn(m_value);
+			m_inCtx = false;
+		}
+
+		T const& get() const { return m_value; }
+
+		Reactive<T>& operator=(T const& val) {
+			set(val);
+			return *this;
+		}
+		Reactive<T>& operator=(Reactive<T> const& val) {
+			set(*val);
+			return *this;
+		}
+		operator T() const { return m_value; }
+		T const* operator->() const {
+			return &m_value;
+		}
+		T const& operator*() const { return m_value; }
+
+		Guard guard() { return Guard(*this); }
+
+		decltype(m_listeners)::pointer react(std::function<void(T const&)> fn) {
+			return m_listeners.push_back(fn);
+		}
+		void unreact(typename decltype(m_listeners)::pointer it) {
+			m_listeners.erase(it);
+		}
+	};
+
 
 	template <typename T> requires (std::derived_from<T, CCObject>)
 	class Build;
@@ -46,59 +135,59 @@ namespace uibuilder {
 	class BuildCallback : public CCNode {
 		std::function<void(T*)> m_callback;
 	 public:
-	 	static BuildCallback* create(std::function<void(T*)> cb) {
-	 		auto bc = new BuildCallback;
+		static BuildCallback* create(std::function<void(T*)> cb) {
+			auto bc = new BuildCallback;
 
-	 		if (bc && bc->init()) {
-	 			bc->autorelease();
-	 			bc->m_callback = cb;
-	 			return bc;
-	 		}
+			if (bc && bc->init()) {
+				bc->autorelease();
+				bc->m_callback = cb;
+				return bc;
+			}
 
-	 		CC_SAFE_DELETE(bc);
-	 		return nullptr;
-	 	}
+			CC_SAFE_DELETE(bc);
+			return nullptr;
+		}
 
-	 	void onCallback(CCObject* sender) {
-	 		m_callback(static_cast<T*>(sender));
-	 	}
+		void onCallback(CCObject* sender) {
+			m_callback(static_cast<T*>(sender));
+		}
 	};
 
 	class BuildSchedule : public CCNode {
 		std::function<void(float)> m_callback;
 	 public:
-	 	inline static BuildSchedule* create(std::function<void(float)> cb) {
-	 		auto bu = new BuildSchedule;
+		inline static BuildSchedule* create(std::function<void(float)> cb) {
+			auto bu = new BuildSchedule;
 
-	 		if (bu && bu->init()) {
-	 			bu->autorelease();
-	 			bu->m_callback = cb;
-	 			return bu;
-	 		}
+			if (bu && bu->init()) {
+				bu->autorelease();
+				bu->m_callback = cb;
+				return bu;
+			}
 
-	 		CC_SAFE_DELETE(bu);
-	 		return nullptr;
-	 	}
+			CC_SAFE_DELETE(bu);
+			return nullptr;
+		}
 
-	 	inline void onSchedule(float dt) {
-	 		m_callback(dt);
-	 	}
+		inline void onSchedule(float dt) {
+			m_callback(dt);
+		}
 	};
 
 	class BuildAction : public CCActionInstant {
-	    std::function<void(float)> m_callback;
+		std::function<void(float)> m_callback;
 	public:
-	    inline static BuildAction* create(std::function<void(float)> cb) {
-	        auto ba = new BuildAction;
+		inline static BuildAction* create(std::function<void(float)> cb) {
+			auto ba = new BuildAction;
 
-	        ba->autorelease();
-	        ba->m_callback = cb;
-	        return ba;
-	    }
+			ba->autorelease();
+			ba->m_callback = cb;
+			return ba;
+		}
 
-	    void update(float time) override {
-	        m_callback(time);
-	    }
+		void update(float time) override {
+			m_callback(time);
+		}
 	};
 
 
@@ -110,29 +199,29 @@ namespace uibuilder {
 		T* m_item;
 	 public:
 
-	 	Build<T> push() {
-	 		buildStack.push_back(m_item);
-	 		return *this;
-	 	}
+		Build<T> push() {
+			buildStack.push_back(m_item);
+			return *this;
+		}
 
-	 	static Build<T> pop() {
-	 		auto ret = reinterpret_cast<T*>(buildStack.back());
-	 		buildStack.pop_back();
+		static Build<T> pop() {
+			auto ret = reinterpret_cast<T*>(buildStack.back());
+			buildStack.pop_back();
 
-	 		return Build<T>(ret);
-	 	}
+			return Build<T>(ret);
+		}
 
-	 	static T* popRaw() {
-	 		auto ret = reinterpret_cast<T*>(buildStack.back());
-	 		buildStack.pop_back();
+		static T* popRaw() {
+			auto ret = reinterpret_cast<T*>(buildStack.back());
+			buildStack.pop_back();
 
-	 		return ret;
-	 	}
+			return ret;
+		}
 
-	 	Build<T> store(T*& in) {
-	 		in = m_item;
-	 		return *this;
-	 	}
+		Build<T> store(T*& in) {
+			in = m_item;
+			return *this;
+		}
 
 		#ifdef GEODE_PLATFORM_TARGET
 		Build<T> store(geode::Ref<T>& in) {
@@ -141,12 +230,12 @@ namespace uibuilder {
 		}
 		#endif
 
-	 	template <typename ...Args> requires requires(Args... args) {
-	 		T::create(args...);
-	 	}
-	 	static Build<T> create(Args... args) {
-	 		return Build(T::create(args...));
-	 	}
+		template <typename ...Args> requires requires(Args... args) {
+			T::create(args...);
+		}
+		static Build<T> create(Args... args) {
+			return Build(T::create(args...));
+		}
 
 		Build(T* item) : m_item(item) {}
 
@@ -471,6 +560,26 @@ namespace uibuilder {
 			).child(bc);
 		}
 
+		template <needs_same(CCMenuItemToggler)>
+		static Build<T> createToggle(char const* on, char const* off, std::function<void(CCMenuItemToggler*)> fn) {
+			return Build<T>::createToggle(
+				CCSprite::createWithSpriteFrameName(on),
+				CCSprite::createWithSpriteFrameName(off),
+				std::move(fn)
+			);
+		}
+
+		template <needs_same(CCMenuItemToggler)>
+		static Build<T> createToggle(std::function<void(CCMenuItemToggler*)> fn) {
+			return Build<T>::createToggle("GJ_checkOn_001.png", "GJ_checkOff_001.png", std::move(fn));
+		}
+
+		template <needs_same(CCMenuItemToggler)>
+		Build<T> toggle(bool tog) {
+			m_item->toggle(tog);
+			return *this;
+		}
+
 		// CCSprite
 		template <needs_same(CCSprite)>
 		static Build<T> createSpriteName(char const* frame) {
@@ -488,12 +597,12 @@ namespace uibuilder {
 		setter(CCSprite, blendFunc, setBlendFunc, ccBlendFunc)
 
 		template <needs_base(CCNode)>
-		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, SEL_MenuHandler selector) {
+		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, auto selector) {
 			auto parent = m_item->getParent();
 			if (parent)
 				parent->removeChild(m_item);
 
-			auto ret = Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, selector);
+			auto ret = Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, (SEL_MenuHandler)selector);
 			if (parent) ret.parent(parent);
 			return ret;
 		}
