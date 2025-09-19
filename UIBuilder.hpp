@@ -1,13 +1,9 @@
 #pragma once
 
-#include <list>
 #include <type_traits>
 #include <concepts>
 #include <functional>
-#include <unordered_set>
-#include <unordered_map>
 #include <vector>
-#include <iostream>
 #include "UIBuildMacros.hpp"
 
 // Include GD and cocos2d classes before this
@@ -21,94 +17,9 @@ namespace uibuilder {
 	using geode::Layout;
 	#endif
 
-	template <typename T>
-	class Reactive {
-		T m_value;
-		bool m_inCtx;
-		std::list<std::function<void(T const&)>> m_listeners;
+	class CCObject; // avoid errors
 
-	 public:
-	 	using ListenerPtr = decltype(m_listeners)::pointer;
-
-	 	class Guard {
-	 		Reactive<T>& m_reactive;
-	 		T m_tempVal;
-	 		Guard(Reactive<T>& r) : m_reactive(r), m_tempVal(r.m_value) {
-	 			r.m_inCtx = true;
-	 		}
-	 	 public:
-	 		Guard(Guard const&) = delete;
-
-	 		void operator=(Guard const&) = delete;
-
-	 		T operator->() requires std::is_pointer_v<T> { return &m_tempVal; }
-	 		T* operator->() requires (!std::is_pointer_v<T>) { return &m_tempVal; }
-	 		T& operator*() { return m_tempVal; }
-
-	 		operator T() const {
-	 			return m_tempVal;
-	 		}
-
-	 	 	~Guard() {
-	 	 		m_reactive.m_inCtx = false;
-	 	 		m_reactive.set(m_tempVal);
-	 	 	}
-	 	};
-	 	friend class Guard;
-
-		Reactive(T const& initial) : m_value(initial), m_inCtx(false) {}
-		Reactive() requires std::is_default_constructible_v<T> : m_value(), m_inCtx(false) {}
-		Reactive(T&& initial) : m_value(std::move(initial)), m_inCtx(false) {}
-		Reactive(Reactive const& other) : m_value(other.m_value), m_inCtx(false) {}
-		Reactive(Reactive&& other) : m_value(std::move(other.m_value)), m_inCtx(false) {}
-
-		void set(T const& val) {
-			if (m_inCtx) {
-				#ifdef GEODE_DLL
-				geode::log::error("Attempt to modify value within its own listener!");
-				#else
-				std::cerr << "Attempt to modify value within its own listener!" << std::endl;
-				#endif
-				return;
-			} else if (m_value == val) {
-				return;
-			}
-
-			m_value = val;
-			m_inCtx = true;
-			for (auto const& fn : m_listeners)
-				fn(m_value);
-			m_inCtx = false;
-		}
-
-		T const& get() const { return m_value; }
-
-		Reactive<T>& operator=(T const& val) {
-			set(val);
-			return *this;
-		}
-		Reactive<T>& operator=(Reactive<T> const& val) {
-			set(*val);
-			return *this;
-		}
-		operator T() const { return m_value; }
-		T const* operator->() const {
-			return &m_value;
-		}
-		T const& operator*() const { return m_value; }
-
-		Guard guard() { return Guard(*this); }
-
-		decltype(m_listeners)::pointer react(std::function<void(T const&)> fn) {
-			return m_listeners.push_back(fn);
-		}
-		void unreact(typename decltype(m_listeners)::pointer it) {
-			m_listeners.erase(it);
-		}
-	};
-
-
-	template <typename T> requires (std::derived_from<T, CCObject>)
+	template <typename T> requires std::derived_from<T, CCObject>
 	class Build;
 
 	template <typename T>
@@ -194,7 +105,7 @@ namespace uibuilder {
 	// the thing
 
 	inline std::vector<void*> buildStack;
-	template <typename T> requires (std::derived_from<T, CCObject>)
+	template <typename T> requires std::derived_from<T, CCObject>
 	class Build {
 		T* m_item;
 	 public:
