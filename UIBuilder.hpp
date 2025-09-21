@@ -17,8 +17,6 @@ namespace uibuilder {
 	using geode::Layout;
 	#endif
 
-	class CCObject; // avoid errors
-
 	template <typename T> requires std::derived_from<T, CCObject>
 	class Build;
 
