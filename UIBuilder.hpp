@@ -17,7 +17,7 @@ namespace uibuilder {
 	using geode::Layout;
 	#endif
 
-	template <typename T> requires (std::derived_from<T, CCObject>)
+	template <typename T> requires std::derived_from<T, CCObject>
 	class Build;
 
 	template <typename T>
@@ -44,76 +44,93 @@ namespace uibuilder {
 	class BuildCallback : public CCNode {
 		std::function<void(T*)> m_callback;
 	 public:
-	 	static BuildCallback* create(std::function<void(T*)> cb) {
-	 		auto bc = new BuildCallback;
+		static BuildCallback* create(std::function<void(T*)> cb) {
+			auto bc = new BuildCallback;
 
-	 		if (bc && bc->init()) {
-	 			bc->autorelease();
-	 			bc->m_callback = cb;
-	 			return bc;
-	 		}
+			if (bc && bc->init()) {
+				bc->autorelease();
+				bc->m_callback = cb;
+				return bc;
+			}
 
-	 		CC_SAFE_DELETE(bc);
-	 		return nullptr;
-	 	}
+			CC_SAFE_DELETE(bc);
+			return nullptr;
+		}
 
-	 	void onCallback(CCObject* sender) {
-	 		m_callback(static_cast<T*>(sender));
-	 	}
+		void onCallback(CCObject* sender) {
+			m_callback(static_cast<T*>(sender));
+		}
 	};
 
 	class BuildSchedule : public CCNode {
 		std::function<void(float)> m_callback;
 	 public:
-	 	inline static BuildSchedule* create(std::function<void(float)> cb) {
-	 		auto bu = new BuildSchedule;
+		inline static BuildSchedule* create(std::function<void(float)> cb) {
+			auto bu = new BuildSchedule;
 
-	 		if (bu && bu->init()) {
-	 			bu->autorelease();
-	 			bu->m_callback = cb;
-	 			return bu;
-	 		}
+			if (bu && bu->init()) {
+				bu->autorelease();
+				bu->m_callback = cb;
+				return bu;
+			}
 
-	 		CC_SAFE_DELETE(bu);
-	 		return nullptr;
-	 	}
+			CC_SAFE_DELETE(bu);
+			return nullptr;
+		}
 
-	 	inline void onSchedule(float dt) {
-	 		m_callback(dt);
-	 	}
+		inline void onSchedule(float dt) {
+			m_callback(dt);
+		}
 	};
+
+	class BuildAction : public CCActionInstant {
+		std::function<void(float)> m_callback;
+	public:
+		inline static BuildAction* create(std::function<void(float)> cb) {
+			auto ba = new BuildAction;
+
+			ba->autorelease();
+			ba->m_callback = cb;
+			return ba;
+		}
+
+		void update(float time) override {
+			m_callback(time);
+		}
+	};
+
 
 	// the thing
 
 	inline std::vector<void*> buildStack;
-	template <typename T> requires (std::derived_from<T, CCObject>)
+	template <typename T> requires std::derived_from<T, CCObject>
 	class Build {
 		T* m_item;
 	 public:
 
-	 	Build<T> push() {
-	 		buildStack.push_back(m_item);
-	 		return *this;
-	 	}
+		Build<T> push() {
+			buildStack.push_back(m_item);
+			return *this;
+		}
 
-	 	static Build<T> pop() {
-	 		auto ret = reinterpret_cast<T*>(buildStack.back());
-	 		buildStack.pop_back();
+		static Build<T> pop() {
+			auto ret = reinterpret_cast<T*>(buildStack.back());
+			buildStack.pop_back();
 
-	 		return Build<T>(ret);
-	 	}
+			return Build<T>(ret);
+		}
 
-	 	static T* popRaw() {
-	 		auto ret = reinterpret_cast<T*>(buildStack.back());
-	 		buildStack.pop_back();
+		static T* popRaw() {
+			auto ret = reinterpret_cast<T*>(buildStack.back());
+			buildStack.pop_back();
 
-	 		return ret;
-	 	}
+			return ret;
+		}
 
-	 	Build<T> store(T*& in) {
-	 		in = m_item;
-	 		return *this;
-	 	}
+		Build<T> store(T*& in) {
+			in = m_item;
+			return *this;
+		}
 
 		#ifdef GEODE_PLATFORM_TARGET
 		Build<T> store(geode::Ref<T>& in) {
@@ -122,12 +139,12 @@ namespace uibuilder {
 		}
 		#endif
 
-	 	template <typename ...Args> requires requires(Args... args) {
-	 		T::create(args...);
-	 	}
-	 	static Build<T> create(Args... args) {
-	 		return Build(T::create(args...));
-	 	}
+		template <typename ...Args> requires requires(Args... args) {
+			T::create(args...);
+		}
+		static Build<T> create(Args... args) {
+			return Build(T::create(args...));
+		}
 
 		Build(T* item) : m_item(item) {}
 
@@ -135,6 +152,8 @@ namespace uibuilder {
 
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
+
+		T* operator->() { return m_item; }
 
 		// CCObject
 
@@ -190,6 +209,12 @@ namespace uibuilder {
 		setter(CCNode, child, addChild, CCNode*)
 		setter(CCNode, userData, setUserData, void*)
 		setter(CCNode, userObject, setUserObject, CCObject*)
+
+		template <needs_base(CCNode), typename ...Args>
+		Build<T> children(Args... chld) {
+			(m_item->addChild(chld), ...);
+			return *this;
+		}
 
 		template <needs_base(CCNode), typename U>
 		Build<T> parent(U newParent) {
@@ -326,6 +351,14 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
+		Build<T> scheduleOnce(std::function<void(float)> fn, float delay = 0) {
+			auto node = BuildSchedule::create(fn);
+			node->scheduleOnce(schedule_selector(BuildSchedule::onSchedule), delay);
+			m_item->addChild(node);
+			return *this;
+		}
+
+		template <needs_base(CCNode)>
 		Build<CCAction> intoAction(int tag) {
 			return Build<CCAction>(m_item->getActionByTag(tag));
 		}
@@ -352,6 +385,11 @@ namespace uibuilder {
 			return *this;
 		}
 
+		template <typename U = CCNode, needs_base(CCNode)>
+		Build<U> intoChildRecurseID(std::string const& id) {
+			return Build<U>(static_cast<U*>(m_item->getChildByIDRecursive(id)));
+		}
+
 		#endif
 
 		// CCRGBAProtocol
@@ -376,8 +414,9 @@ namespace uibuilder {
 
 		template <needs_base(CCLayer)>
 		Build<T> initTouch() {
-			registerTouchDispatcher();
-			return touchEnabled(true).mouseEnabled(true);
+			touchEnabled(true).mouseEnabled(true).touchMode(kCCTouchesOneByOne);
+			CCDirector::sharedDirector()->getTouchDispatcher()->registerForcePrio(m_item, 2);
+			return *this;
 		}
 
 		template <needs_base(CCLayer)>
@@ -435,6 +474,26 @@ namespace uibuilder {
 			).child(bc);
 		}
 
+		template <needs_same(CCMenuItemToggler)>
+		static Build<T> createToggle(char const* on, char const* off, std::function<void(CCMenuItemToggler*)> fn) {
+			return Build<T>::createToggle(
+				CCSprite::createWithSpriteFrameName(on),
+				CCSprite::createWithSpriteFrameName(off),
+				std::move(fn)
+			);
+		}
+
+		template <needs_same(CCMenuItemToggler)>
+		static Build<T> createToggle(std::function<void(CCMenuItemToggler*)> fn) {
+			return Build<T>::createToggle("GJ_checkOn_001.png", "GJ_checkOff_001.png", std::move(fn));
+		}
+
+		template <needs_same(CCMenuItemToggler)>
+		Build<T> toggle(bool tog) {
+			m_item->toggle(tog);
+			return *this;
+		}
+
 		// CCSprite
 		template <needs_same(CCSprite)>
 		static Build<T> createSpriteName(char const* frame) {
@@ -452,35 +511,51 @@ namespace uibuilder {
 		setter(CCSprite, blendFunc, setBlendFunc, ccBlendFunc)
 
 		template <needs_base(CCNode)>
-		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, SEL_MenuHandler selector) {
-			return Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, selector);
+		Build<CCMenuItemSpriteExtra> intoMenuItem(CCObject* target, auto selector) {
+			auto parent = m_item->getParent();
+			if (parent)
+				parent->removeChild(m_item);
+
+			auto ret = Build<CCMenuItemSpriteExtra>::create(m_item, m_item, target, (SEL_MenuHandler)selector);
+			if (parent) ret.parent(parent);
+			return ret;
 		}
 
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void(CCMenuItemSpriteExtra*)> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
-			//m_item->addChild(bc);
 
-			return Build<CCMenuItemSpriteExtra>::create(
+			auto parent = m_item->getParent();
+			if (parent)
+				parent->removeChild(m_item);
+
+			auto ret = Build<CCMenuItemSpriteExtra>::create(
 				m_item,
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
 			).child(bc);
+			if (parent) ret.parent(parent);
+			return ret;
 		}
 
 		// same as intoMenuItem except the callback can be with no args
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
-			//m_item->addChild(bc);
 
-			return Build<CCMenuItemSpriteExtra>::create(
+			auto parent = m_item->getParent();
+			if (parent)
+				parent->removeChild(m_item);
+
+			auto ret = Build<CCMenuItemSpriteExtra>::create(
 				m_item,
 				m_item,
 				bc,
 				menu_selector(BuildCallback<CCMenuItemSpriteExtra>::onCallback)
 			).child(bc);
+			if (parent) ret.parent(parent);
+			return ret;
 		}
 
 
@@ -560,9 +635,14 @@ namespace uibuilder {
 			return Build<CCRepeatForever>::create(m_item);
 		}
 
-		template <needs_base(CCActionInterval), typename U> requires std::derived_from<remove_build_t<U>, CCActionInterval>
+		template <needs_base(CCActionInterval), typename U> requires std::derived_from<remove_build_t<U>, CCFiniteTimeAction>
 		Build<CCSequence> sequence(U action) {
 			return Build<CCSequence>(CCSequence::create(m_item, remove_build<U>()(action), nullptr));
+		}
+
+		template <needs_base(CCActionInterval)>
+		Build<CCSequence> sequence(std::function<void()> cb) {
+			return sequence(BuildAction::create([fn = std::move(cb)](float dt) { fn(); }));
 		}
 
 		template <needs_base(CCActionInterval)>
