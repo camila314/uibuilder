@@ -366,7 +366,7 @@ namespace uibuilder {
 		// Geode stuff
 		#ifdef GEODE_DLL
 		setter(CCNode, id, setID, std::string const&)
-		setter(CCNode, layout, setLayout, Layout*)
+		setter(CCNode, layout, setLayout, geode::Layout*)
 
 		template <needs_base(CCNode)>
 		Build<T> updateLayout() {
@@ -379,11 +379,16 @@ namespace uibuilder {
 			return Build<U>(static_cast<U*>(m_item->getChildByID(id)));
 		}
 
+		template <needs_base(CCNode), typename U>
+		Build<T> parentAtPos(U newParent, geode::Anchor anchor, CCPoint const& offset = CCPointZero, bool useAnchorLayout = true) {
+			remove_build<U>()(newParent)->addChildAtPosition(m_item, anchor, offset, useAnchorLayout);
+			return *this;
+		}
+
 		template <typename U = CCNode, needs_base(CCNode)>
 		Build<U> intoChildRecurseID(std::string const& id) {
 			return Build<U>(static_cast<U*>(m_item->getChildByIDRecursive(id)));
 		}
-
 
 		#endif
 
