@@ -367,6 +367,7 @@ namespace uibuilder {
 		#ifdef GEODE_DLL
 		setter(CCNode, id, setID, std::string const&)
 		setter(CCNode, layout, setLayout, geode::Layout*)
+		setter(CCNode, layoutOpts, setLayoutOptions, geode::LayoutOptions*)
 
 		template <needs_base(CCNode)>
 		Build<T> updateLayout() {
@@ -390,6 +391,46 @@ namespace uibuilder {
 			return Build<U>(static_cast<U*>(m_item->getChildByIDRecursive(id)));
 		}
 
+		setter(geode::Layout, ignoreInvisible, ignoreInvisibleChildren, bool)
+
+		setter(geode::AxisLayout, axis, setAxis, geode::Axis)
+		setter(geode::AxisLayout, align, setAxisAlignment, geode::AxisAlignment)
+		setter(geode::AxisLayout, crossAlign, setCrossAxisAlignment, geode::AxisAlignment)
+		setter(geode::AxisLayout, lineAlign, setCrossAxisLineAlignment, geode::AxisAlignment)
+		setter(geode::AxisLayout, gap, setGap, float)
+		setter(geode::AxisLayout, reverse, setAxisReverse, bool)
+		setter(geode::AxisLayout, crossReverse, setCrossAxisReverse, bool)
+		setter(geode::AxisLayout, autoScale, setAutoScale, bool)
+		setter(geode::AxisLayout, crossGrow, setGrowCrossAxis, bool)
+		setter(geode::AxisLayout, crossOverflow, setCrossAxisOverflow, bool)
+		setter(geode::AxisLayout, autoGrow, setAutoGrowAxis, std::optional<float>)
+
+		setter(geode::AxisLayoutOptions, relativeScale, setRelativeScale, float)
+		setter(geode::AxisLayoutOptions, autoScale, setAutoScale, std::optional<bool>)
+		setter(geode::AxisLayoutOptions, length, setLength, std::optional<float>)
+		setter(geode::AxisLayoutOptions, prevGap, setPrevGap, std::optional<float>)
+		setter(geode::AxisLayoutOptions, nextGap, setNextGap, std::optional<float>)
+		setter(geode::AxisLayoutOptions, breakLine, setBreakLine, bool)
+		setter(geode::AxisLayoutOptions, sameLine, setSameLine, bool)
+		setter(geode::AxisLayoutOptions, scalePrio, setScalePriority, int)
+		setter(geode::AxisLayoutOptions, crossAlign, setCrossAxisAlignment, std::optional<geode::AxisAlignment>)
+
+		setter(geode::AnchorLayoutOptions, anchor, setAnchor, geode::Anchor)
+		setter(geode::AnchorLayoutOptions, offset, setOffset, CCPoint const&)
+
+		template <needs_base(geode::AxisLayout)>
+		static Build<T> createWithAligns(geode::AxisAlignment main, geode::AxisAlignment cross) {
+			return Build<T>::create().align(main).crossAlign(cross);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> setAnchorOpts(geode::Anchor anchor, CCPoint const& offset = CCPointZero) {
+			auto opts = geode::AnchorLayoutOptions::create();
+			opts->setAnchor(anchor);
+			opts->setOffset(offset);
+			m_item->setLayoutOptions(opts);
+			return *this;
+		}
 		#endif
 
 		// CCRGBAProtocol
