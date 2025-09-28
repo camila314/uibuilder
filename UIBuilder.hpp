@@ -290,6 +290,21 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
+		Build<T> scaleToMatchX(float x) {
+			return scaleXBy(x / m_item->getContentSize().width);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> scaleToMatchY(float y) {
+			return scaleYBy(y / m_item->getContentSize().height);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> scaleToMatch(CCSize size) {
+			return scaleToMatchX(size.width).scaleToMatchY(size.height);
+		}
+
+		template <needs_base(CCNode)>
 		Build<T> move(float x, float y) {
 			return pos(m_item->getPositionX() + x, m_item->getPositionY() + y);
 		}
