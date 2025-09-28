@@ -148,7 +148,7 @@ namespace uibuilder {
 
 		Build(T* item) : m_item(item) {}
 
-		T* collect() {return m_item;}
+		T* collect() const {return m_item;}
 
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
@@ -333,8 +333,8 @@ namespace uibuilder {
 			return anchorPoint(ccp(x, y));
 		}
 
-		template <needs_base(CCNode), typename U>
-		Build<T> iterChildren(std::function<void(U*)> iter) {
+		template <typename U, needs_base(CCNode), std::invocable<U*> F>
+		Build<T> iterChildren(F iter) {
 			for (unsigned int i = 0; i < m_item->getChildrenCount(); ++i) {
 				iter(static_cast<U*>(m_item->getChildren()->objectAtIndex(i)));
 			}
