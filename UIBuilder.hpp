@@ -153,7 +153,10 @@ namespace uibuilder {
 		template <typename U> requires std::derived_from<T, U>
 		operator U*() { return m_item; }
 
+		// Intellisense likes to throw a fit.
+		#ifndef UIBUILDER_NO_ARROW
 		T* operator->() { return m_item; }
+		#endif
 
 		// CCObject
 
@@ -291,12 +294,12 @@ namespace uibuilder {
 
 		template <needs_base(CCNode)>
 		Build<T> scaleToMatchX(float x) {
-			return scaleXBy(x / m_item->getContentSize().width);
+			return scaleX(x / m_item->getContentSize().width);
 		}
 
 		template <needs_base(CCNode)>
 		Build<T> scaleToMatchY(float y) {
-			return scaleYBy(y / m_item->getContentSize().height);
+			return scaleY(y / m_item->getContentSize().height);
 		}
 
 		template <needs_base(CCNode)>
@@ -356,6 +359,8 @@ namespace uibuilder {
 
 			return *this;
 		}
+
+		setter(CCNode, runAction, runAction, CCAction*)
 
 		template <needs_base(CCNode)>
 		Build<T> schedule(std::function<void(float)> fn, int repeat = -1) {
