@@ -139,7 +139,7 @@ namespace uibuilder {
 		}
 		#endif
 
-		template <typename ...Args> requires requires(Args... args) {
+		template <typename ...Args> requires !std::derived_from<CCSequence> && requires(Args... args) {
 			T::create(args...);
 		}
 		static Build<T> create(Args... args) {
