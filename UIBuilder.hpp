@@ -666,6 +666,13 @@ namespace uibuilder {
 			return *this;
 		}
 
+		// CCSequence
+
+		template <needs_base(CCSequence), typename ...Args>
+		static Build<T> create(Args... args) {
+			return Build(CCSequence::create(args..., nullptr));
+		}
+
 		// CCFollow
 		setter(CCFollow, boundarySet, setBoundarySet, bool)
 
