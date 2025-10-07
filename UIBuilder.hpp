@@ -738,6 +738,20 @@ namespace uibuilder {
 
 using uibuilder::Build;
 
+#define $build_wrap(func) with([&](auto self) { self->func; })
+
 #undef setter
 #undef needs_base
 #undef needs_same
+#undef arg_1
+#undef arg_2
+#undef arg_3
+#undef setter_0
+#undef setter_1
+#undef setter_2
+#undef setter_3
+#undef setter_n
+#undef NLIST
+#undef _CONCAT
+#undef CONCAT
+

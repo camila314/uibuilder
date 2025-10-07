@@ -22,3 +22,4 @@
 #define _CONCAT(a, b) a ## b
 #define CONCAT(a, b) _CONCAT(a, b)
 #define setter(base, name, oldname, ...) CONCAT(setter_, NLIST(5, ##__VA_ARGS__, 3, 2, 1, 0))(base, name, oldname, ##__VA_ARGS__)
+
