@@ -68,14 +68,10 @@ namespace uibuilder {
 		inline static BuildSchedule* create(std::function<void(float)> cb) {
 			auto bu = new BuildSchedule;
 
-			if (bu && bu->init()) {
-				bu->autorelease();
-				bu->m_callback = cb;
-				return bu;
-			}
-
-			CC_SAFE_DELETE(bu);
-			return nullptr;
+			bu->init();
+			bu->autorelease();
+			bu->m_callback = std::move(cb);
+			return bu;
 		}
 
 		inline void onSchedule(float dt) {
@@ -192,6 +188,22 @@ namespace uibuilder {
 			}
 
 			return *this;
+		}
+
+		// CCScheduler
+		template <needs_same(CCScheduler)>
+		static BuildSchedule* schedule(std::function<void(float)> fn, float interval = 0, unsigned int repeat = kCCRepeatForever) {
+			auto node = BuildSchedule::create(fn);
+			node->retain();
+
+			CCDirector::sharedDirector()->getScheduler()->scheduleSelector(
+				schedule_selector(BuildSchedule::onSchedule),
+				node,
+				interval,
+				repeat
+			);
+
+			return node;
 		}
 
 		// CCNode
@@ -363,9 +375,9 @@ namespace uibuilder {
 		setter(CCNode, runAction, runAction, CCAction*)
 
 		template <needs_base(CCNode)>
-		Build<T> schedule(std::function<void(float)> fn, int repeat = -1) {
+		Build<T> schedule(std::function<void(float)> fn, float interval = 0, int repeat = -1, float delay = 0) {
 			auto node = BuildSchedule::create(fn);
-			node->schedule(schedule_selector(BuildSchedule::onSchedule), repeat);
+			node->schedule(schedule_selector(BuildSchedule::onSchedule), interval, repeat, delay);
 			m_item->addChild(node);
 			return *this;
 		}
