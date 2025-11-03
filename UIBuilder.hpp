@@ -200,7 +200,9 @@ namespace uibuilder {
 				schedule_selector(BuildSchedule::onSchedule),
 				node,
 				interval,
-				repeat
+				repeat,
+				0,
+				false
 			);
 
 			return node;
@@ -337,9 +339,25 @@ namespace uibuilder {
 		template <needs_base(CCNode)>
 		Build<T> center() {
 			if (m_item->getParent() == nullptr)
-				return absoluteCenter();
+				return pos(CCPoint(CCDirector::sharedDirector()->getWinSize() / 2.0));
 			else
-				return pos(m_item->getParent()->getContentSize() / 2);
+				return pos(m_item->getParent()->getContentSize() / 2.0);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> centerX() {
+			if (m_item->getParent() == nullptr)
+				return posX(CCDirector::sharedDirector()->getWinSize().width / 2.0);
+			else
+				return posX(m_item->getParent()->getContentWidth() / 2.0);
+		}
+
+		template <needs_base(CCNode)>
+		Build<T> centerY() {
+			if (m_item->getParent() == nullptr)
+				return posY(CCDirector::sharedDirector()->getWinSize().height / 2.0);
+			else
+				return posY(m_item->getParent()->getContentHeight() / 2.0);
 		}
 
 		template <needs_base(CCNode)>
@@ -533,6 +551,16 @@ namespace uibuilder {
 			this->m_item->m_scaleMultiplier = p0;
 			return *this;
 		}
+		template <needs_base(CCMenuItemSpriteExtra)>
+		Build<T> colorEnabled(bool enabled) {
+			this->m_item->m_colorEnabled = enabled;
+			return *this;
+		}
+		template <needs_base(CCMenuItemSpriteExtra)>
+		Build<T> animationEnabled(bool enabled) {
+			this->m_item->m_animationEnabled = enabled;
+			return *this;
+		}
 
 		// CCMenuItemToggler
 		template <needs_same(CCMenuItemToggler)>
@@ -631,6 +659,11 @@ namespace uibuilder {
 			return ret;
 		}
 
+		template <needs_base(CCLabelProtocol)>
+		Build<T> string(std::string const& str) {
+			m_item->setString(str.c_str());
+			return *this;
+		}
 
 		// CCLabelProtocol
 		setter(CCLabelProtocol, string, setString, const char*)
