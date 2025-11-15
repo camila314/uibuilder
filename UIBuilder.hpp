@@ -481,6 +481,9 @@ namespace uibuilder {
 			m_item->setLayoutOptions(opts);
 			return *this;
 		}
+
+		setter(geode::BasedButtonSprite, topScale, setTopRelativeScale, float)
+		setter(geode::BasedButtonSprite, topOffset, setTopOffset, CCPoint const&)
 		#endif
 
 		// CCRGBAProtocol
@@ -671,6 +674,8 @@ namespace uibuilder {
 		// CCLabelBMFont
 		setter(CCLabelBMFont, alignment, setAlignment, CCTextAlignment)
 		setter(CCLabelBMFont, limitLabelWidth, limitLabelWidth, float, float, float)
+		setter(CCLabelBMFont, kerning, setExtraKerning, float)
+		setter(CCLabelBMFont, breakWithoutSpace, setLineBreakWithoutSpace, bool)
 
 		// CCTextInputNode
 		setter(CCTextInputNode, labelColor, setLabelNormalColor, ccColor3B const&)
