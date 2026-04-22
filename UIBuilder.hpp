@@ -226,6 +226,7 @@ namespace uibuilder {
 		setter(CCNode, child, addChild, CCNode*)
 		setter(CCNode, userData, setUserData, void*)
 		setter(CCNode, userObject, setUserObject, CCObject*)
+		setter(CCNode, userObject, setUserObject, std::string const&, CCObject*)
 
 		template <needs_base(CCNode), typename ...Args>
 		Build<T> children(Args... chld) {
@@ -269,6 +270,12 @@ namespace uibuilder {
 		Build<remove_build_t<U>> intoNewParent(U newParent) {
 			remove_build<U>()(newParent)->addChild(m_item);
 			return Build<remove_build_t<U>>(newParent);
+		}
+
+		template <needs_base(CCNode), typename U>
+		Build<remove_build_t<U>> intoUserObject(std::string const& id) {
+			auto obj = remove_build<U>()(m_item->getUserObject(id));
+			return Build<remove_build_t<U>>(obj);
 		}
 
 		template <needs_base(CCNode)>
