@@ -54,7 +54,7 @@ namespace uibuilder {
 
 			if (bc && bc->init()) {
 				bc->autorelease();
-				bc->m_callback = cb;
+				bc->m_callback = std::move(cb);
 				return bc;
 			}
 
@@ -91,7 +91,7 @@ namespace uibuilder {
 			auto ba = new BuildAction;
 
 			ba->autorelease();
-			ba->m_callback = cb;
+			ba->m_callback = std::move(cb);
 			return ba;
 		}
 
@@ -198,7 +198,7 @@ namespace uibuilder {
 		// CCScheduler
 		template <needs_same(CCScheduler)>
 		static BuildSchedule* schedule(FunctionType<void(float)> fn, float interval = 0, unsigned int repeat = kCCRepeatForever) {
-			auto node = BuildSchedule::create(fn);
+			auto node = BuildSchedule::create(std::move(fn));
 			node->retain();
 
 			CCDirector::sharedDirector()->getScheduler()->scheduleSelector(
@@ -406,7 +406,7 @@ namespace uibuilder {
 
 		template <needs_base(CCNode)>
 		Build<T> schedule(FunctionType<void(float)> fn, float interval = 0, int repeat = -1, float delay = 0) {
-			auto node = BuildSchedule::create(fn);
+			auto node = BuildSchedule::create(std::move(fn));
 			node->schedule(schedule_selector(BuildSchedule::onSchedule), interval, repeat, delay);
 			m_item->addChild(node);
 			return *this;
@@ -414,7 +414,7 @@ namespace uibuilder {
 
 		template <needs_base(CCNode)>
 		Build<T> scheduleOnce(FunctionType<void(float)> fn, float delay = 0) {
-			auto node = BuildSchedule::create(fn);
+			auto node = BuildSchedule::create(std::move(fn));
 			node->scheduleOnce(schedule_selector(BuildSchedule::onSchedule), delay);
 			m_item->addChild(node);
 			return *this;
@@ -580,7 +580,7 @@ namespace uibuilder {
 		// CCMenuItemToggler
 		template <needs_same(CCMenuItemToggler)>
 		static Build<T> createToggle(CCSprite* on, CCSprite* off, FunctionType<void(CCMenuItemToggler*)> fn) {
-			auto bc = BuildCallback<CCMenuItemToggler>::create(fn);
+			auto bc = BuildCallback<CCMenuItemToggler>::create(std::move(fn));
 
 			return Build<CCMenuItemToggler>::create(
 				on,
@@ -639,7 +639,7 @@ namespace uibuilder {
 
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(FunctionType<void(CCMenuItemSpriteExtra*)> fn) {
-			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
+			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(std::move(fn));
 
 			auto parent = m_item->getParent();
 			if (parent)
