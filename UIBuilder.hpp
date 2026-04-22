@@ -15,6 +15,11 @@ namespace uibuilder {
 
 	#ifdef GEODE_DLL
 	using geode::Layout;
+	template <typename F>
+	using FunctionType = geode::Function<F>;
+	#else
+	template <typename F>
+	using FunctionType = std::function<F>;
 	#endif
 
 	template <typename T> requires std::derived_from<T, CCObject>
@@ -42,9 +47,9 @@ namespace uibuilder {
 
 	template <typename T>
 	class BuildCallback : public CCNode {
-		std::function<void(T*)> m_callback;
+		FunctionType<void(T*)> m_callback;
 	 public:
-		static BuildCallback* create(std::function<void(T*)> cb) {
+		static BuildCallback* create(FunctionType<void(T*)> cb) {
 			auto bc = new BuildCallback;
 
 			if (bc && bc->init()) {
@@ -63,9 +68,9 @@ namespace uibuilder {
 	};
 
 	class BuildSchedule : public CCNode {
-		std::function<void(float)> m_callback;
+		FunctionType<void(float)> m_callback;
 	 public:
-		inline static BuildSchedule* create(std::function<void(float)> cb) {
+		inline static BuildSchedule* create(FunctionType<void(float)> cb) {
 			auto bu = new BuildSchedule;
 
 			bu->init();
@@ -80,9 +85,9 @@ namespace uibuilder {
 	};
 
 	class BuildAction : public CCActionInstant {
-		std::function<void(float)> m_callback;
+		FunctionType<void(float)> m_callback;
 	public:
-		inline static BuildAction* create(std::function<void(float)> cb) {
+		inline static BuildAction* create(FunctionType<void(float)> cb) {
 			auto ba = new BuildAction;
 
 			ba->autorelease();
@@ -171,7 +176,7 @@ namespace uibuilder {
 			return Build<U>(m_item->objectAtIndex(index));
 		}
 
-		Build<T> with(std::function<void(T*)> fn) {
+		Build<T> with(FunctionType<void(T*)> fn) {
 			fn(m_item);
 			return *this;
 		}
@@ -182,7 +187,7 @@ namespace uibuilder {
 		}
 
 		template <typename U, needs_base(CCArray)>
-		Build<T> forEach(std::function<void(U*)> iter) {
+		Build<T> forEach(FunctionType<void(U*)> iter) {
 			for (unsigned int i = 0; i < m_item->count(); ++i) {
 				iter(static_cast<U*>(m_item->objectAtIndex(i)));
 			}
@@ -192,7 +197,7 @@ namespace uibuilder {
 
 		// CCScheduler
 		template <needs_same(CCScheduler)>
-		static BuildSchedule* schedule(std::function<void(float)> fn, float interval = 0, unsigned int repeat = kCCRepeatForever) {
+		static BuildSchedule* schedule(FunctionType<void(float)> fn, float interval = 0, unsigned int repeat = kCCRepeatForever) {
 			auto node = BuildSchedule::create(fn);
 			node->retain();
 
@@ -400,7 +405,7 @@ namespace uibuilder {
 		setter(CCNode, runAction, runAction, CCAction*)
 
 		template <needs_base(CCNode)>
-		Build<T> schedule(std::function<void(float)> fn, float interval = 0, int repeat = -1, float delay = 0) {
+		Build<T> schedule(FunctionType<void(float)> fn, float interval = 0, int repeat = -1, float delay = 0) {
 			auto node = BuildSchedule::create(fn);
 			node->schedule(schedule_selector(BuildSchedule::onSchedule), interval, repeat, delay);
 			m_item->addChild(node);
@@ -408,7 +413,7 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
-		Build<T> scheduleOnce(std::function<void(float)> fn, float delay = 0) {
+		Build<T> scheduleOnce(FunctionType<void(float)> fn, float delay = 0) {
 			auto node = BuildSchedule::create(fn);
 			node->scheduleOnce(schedule_selector(BuildSchedule::onSchedule), delay);
 			m_item->addChild(node);
@@ -574,7 +579,7 @@ namespace uibuilder {
 
 		// CCMenuItemToggler
 		template <needs_same(CCMenuItemToggler)>
-		static Build<T> createToggle(CCSprite* on, CCSprite* off, std::function<void(CCMenuItemToggler*)> fn) {
+		static Build<T> createToggle(CCSprite* on, CCSprite* off, FunctionType<void(CCMenuItemToggler*)> fn) {
 			auto bc = BuildCallback<CCMenuItemToggler>::create(fn);
 
 			return Build<CCMenuItemToggler>::create(
@@ -586,7 +591,7 @@ namespace uibuilder {
 		}
 
 		template <needs_same(CCMenuItemToggler)>
-		static Build<T> createToggle(char const* on, char const* off, std::function<void(CCMenuItemToggler*)> fn) {
+		static Build<T> createToggle(char const* on, char const* off, FunctionType<void(CCMenuItemToggler*)> fn) {
 			return Build<T>::createToggle(
 				CCSprite::createWithSpriteFrameName(on),
 				CCSprite::createWithSpriteFrameName(off),
@@ -595,7 +600,7 @@ namespace uibuilder {
 		}
 
 		template <needs_same(CCMenuItemToggler)>
-		static Build<T> createToggle(std::function<void(CCMenuItemToggler*)> fn) {
+		static Build<T> createToggle(FunctionType<void(CCMenuItemToggler*)> fn) {
 			return Build<T>::createToggle("GJ_checkOn_001.png", "GJ_checkOff_001.png", std::move(fn));
 		}
 
@@ -633,7 +638,7 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCNode)>
-		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void(CCMenuItemSpriteExtra*)> fn) {
+		Build<CCMenuItemSpriteExtra> intoMenuItem(FunctionType<void(CCMenuItemSpriteExtra*)> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create(fn);
 
 			auto parent = m_item->getParent();
@@ -652,7 +657,7 @@ namespace uibuilder {
 
 		// same as intoMenuItem except the callback can be with no args
 		template <needs_base(CCNode)>
-		Build<CCMenuItemSpriteExtra> intoMenuItem(std::function<void()> fn) {
+		Build<CCMenuItemSpriteExtra> intoMenuItem(FunctionType<void()> fn) {
 			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
 
 			auto parent = m_item->getParent();
@@ -766,7 +771,7 @@ namespace uibuilder {
 		}
 
 		template <needs_base(CCActionInterval)>
-		Build<CCSequence> sequence(std::function<void()> cb) {
+		Build<CCSequence> sequence(FunctionType<void()> cb) {
 			return sequence(BuildAction::create([fn = std::move(cb)](float dt) { fn(); }));
 		}
 
