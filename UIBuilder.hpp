@@ -658,7 +658,7 @@ namespace uibuilder {
 		// same as intoMenuItem except the callback can be with no args
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(FunctionType<void()> fn) {
-			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)](auto) { fn(); });
+			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)] mutable (auto) { fn(); });
 
 			auto parent = m_item->getParent();
 			if (parent)
@@ -772,7 +772,7 @@ namespace uibuilder {
 
 		template <needs_base(CCActionInterval)>
 		Build<CCSequence> sequence(FunctionType<void()> cb) {
-			return sequence(BuildAction::create([fn = std::move(cb)](float dt) { fn(); }));
+			return sequence(BuildAction::create([fn = std::move(cb)](float dt) mutable { fn(); }));
 		}
 
 		template <needs_base(CCActionInterval)>
