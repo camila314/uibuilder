@@ -658,7 +658,7 @@ namespace uibuilder {
 		// same as intoMenuItem except the callback can be with no args
 		template <needs_base(CCNode)>
 		Build<CCMenuItemSpriteExtra> intoMenuItem(FunctionType<void()> fn) {
-			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)] mutable (auto) { fn(); });
+			auto bc = BuildCallback<CCMenuItemSpriteExtra>::create([fn = std::move(fn)] (auto) mutable { fn(); });
 
 			auto parent = m_item->getParent();
 			if (parent)
